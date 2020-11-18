@@ -1,0 +1,91 @@
+version: '2'
+
+services:
+  proxy:
+    ports:
+      - 80:80
+      - 443:443
+  php:
+    volumes:
+      - ./var/bashrc:/root/.bashrc
+      - ./var/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+      - $HOME/.composer:/root/.composer:cached
+      - $HOME/.ssh:/root/.ssh:cached
+      - $HOME/.gitconfig:/root/.gitconfig
+  database:
+    ports:
+      - 3306:3306
+#   elasticsearch:
+#     ports:
+#       - 9200:9200
+#       - 9300:9300
+#   rabbitmq:
+#     image: rabbitmq:${MAGENTO_RABBITMQ_VERSION}-management
+#     ports:
+#       - 5672:5672
+#       - 8082:15672
+#   redis:
+#     ports:
+#       - 6379:6379
+#   phpmyadmin:
+#     image: phpmyadmin
+#     depends_on:
+#       - database
+#     environment:
+#       - PMA_HOST=database
+#       - PMA_USER=root
+#       - PMA_PASSWORD=${MAGENTO_DATABASE_ROOT_PASSWORD}
+#     networks:
+#       - backend
+#     ports:
+#       - 8080:80
+#   elasticsearch-hq:
+#     image: elastichq/elasticsearch-hq
+#     depends_on:
+#       - elasticsearch
+#     networks:
+#       - backend
+#     ports:
+#       - 8081:5000
+#   redis-commander:
+#     image: rediscommander/redis-commander
+#     depends_on:
+#       - redis
+#     environment:
+#       - REDIS_HOSTS=local:redis:6379
+#     networks:
+#       - backend
+#     ports:
+#       - 8083:8081
+
+# volumes:
+#   magento:
+#     driver: local
+#     driver_opts:
+#       o: bind
+#       type: none
+#       device: $PWD/var/magento
+#   database:
+#     driver: local
+#     driver_opts:
+#       o: bind
+#       type: none
+#       device: $PWD/var/database
+#   elasticsearch:
+#     driver: local
+#     driver_opts:
+#       o: bind
+#       type: none
+#       device: $PWD/var/elasticsearch
+#   redis:
+#     driver: local
+#     driver_opts:
+#       o: bind
+#       type: none
+#       device: $PWD/var/redis
+#   rabbitmq:
+#     driver: local
+#     driver_opts:
+#       o: bind
+#       type: none
+#       device: $PWD/var/rabbitmq

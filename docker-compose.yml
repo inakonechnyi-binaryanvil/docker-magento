@@ -1,0 +1,87 @@
+version: "2"
+
+services:
+  proxy:
+    build:
+      context: images/proxy/${MAGENTO_PROXY_VERSION}
+      args:
+        - MAGENTO_DOMAIN=${MAGENTO_DOMAIN}
+    depends_on:
+      - php
+    networks:
+      frontend:
+        aliases:
+          - ${MAGENTO_DOMAIN}
+    volumes:
+      - magento:/var/www/html:cached
+  php:
+    build: images/php/${MAGENTO_PHP_VERSION}
+    depends_on:
+      - database
+      - elasticsearch
+      - rabbitmq
+      - redis
+    environment:
+      - MAGENTO_DOMAIN=${MAGENTO_DOMAIN}
+      - MAGENTO_DEVELOPER_MODE=${MAGENTO_DEVELOPER_MODE}
+      - MAGENTO_DATABASE_HOST=database
+      - MAGENTO_DATABASE_NAME=${MAGENTO_DATABASE_NAME}
+      - MAGENTO_DATABASE_USERNAME=${MAGENTO_DATABASE_USERNAME}
+      - MAGENTO_DATABASE_PASSWORD=${MAGENTO_DATABASE_PASSWORD}
+      - MAGENTO_ELASTICSEARCH_HOST=elasticsearch
+      - MAGENTO_RABBITMQ_HOST=rabbitmq
+      - MAGENTO_RABBITMQ_USERNAME=${MAGENTO_RABBITMQ_USERNAME}
+      - MAGENTO_RABBITMQ_PASSWORD=${MAGENTO_RABBITMQ_PASSWORD}
+      - MAGENTO_REDIS_HOST=redis
+    networks:
+      - frontend
+      - backend
+    volumes:
+      - magento:/var/www/html:cached
+  database:
+    image: ${MAGENTO_DATABASE_VERSION}
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MAGENTO_DATABASE_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MAGENTO_DATABASE_NAME}
+      - MYSQL_USER=${MAGENTO_DATABASE_USERNAME}
+      - MYSQL_PASSWORD=${MAGENTO_DATABASE_PASSWORD}
+    networks:
+      - backend
+    volumes:
+      - database:/var/lib/mysql:delegated
+  elasticsearch:
+    build: images/elasticsearch/${MAGENTO_ELASTICSEARCH_VERSION}
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - backend
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data:delegated
+  rabbitmq:
+    image: rabbitmq:${MAGENTO_RABBITMQ_VERSION}
+    environment:
+      - RABBITMQ_DEFAULT_USER=${MAGENTO_RABBITMQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${MAGENTO_RABBITMQ_PASSWORD}
+    networks:
+      - backend
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq:delegated
+  redis:
+    image: redis:${MAGENTO_REDIS_VERSION}
+    networks:
+      - backend
+    volumes:
+      - redis:/data:delegated
+
+volumes:
+  magento:
+  database:
+  elasticsearch:
+  rabbitmq:
+  redis:
+
+networks:
+  backend:
+  frontend:

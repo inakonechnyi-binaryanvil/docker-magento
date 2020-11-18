@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname "$0")/common.sh
+
+read_env
+read_params "$@"
+
+get_var DATABASE_DUMP_SCHEMA "0"
+get_var DATABASE_DUMP_DATA
+
+save_env
+
+run "docker-compose exec -T database mysql -u root -p${MAGENTO_DATABASE_ROOT_PASSWORD} -e \"DROP DATABASE IF EXISTS ${MAGENTO_DATABASE_NAME}\""
+run "docker-compose exec -T database mysql -u root -p${MAGENTO_DATABASE_ROOT_PASSWORD} -e \"CREATE DATABASE ${MAGENTO_DATABASE_NAME}\""
+if [ "$DATABASE_DUMP_SCHEMA" != "0" ]; then
+    run "zcat < ${DATABASE_DUMP_SCHEMA} | docker-compose exec -T database mysql -u root -p${MAGENTO_DATABASE_ROOT_PASSWORD} ${MAGENTO_DATABASE_NAME}"
+fi
+run "zcat < ${DATABASE_DUMP_DATA} | docker-compose exec -T database mysql -u root -p${MAGENTO_DATABASE_ROOT_PASSWORD} ${MAGENTO_DATABASE_NAME}"
+run "docker-compose exec -T database mysql -u root -p${MAGENTO_DATABASE_ROOT_PASSWORD} -e \"GRANT ALL PRIVILEGES ON ${MAGENTO_DATABASE_NAME}.* TO '${MAGENTO_DATABASE_USERNAME}'@'%'\""
+run "docker-compose exec -T database mysql -u root -p${MAGENTO_DATABASE_ROOT_PASSWORD} -e \"FLUSH PRIVILEGES\""

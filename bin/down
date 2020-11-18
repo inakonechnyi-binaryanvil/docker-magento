@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname "$0")/common.sh
+
+read_env
+read_params "$@"
+
+DOWN_ARGS=""
+
+get_var DELETE_ALL "0"
+if [ "$DELETE_ALL" = "0" ]; then
+    get_var DELETE_IMAGES "0"
+    if [ "$DELETE_IMAGES" != "0" ]; then
+        get_var IMAGE_TYPE "local"
+        DOWN_ARGS="$DOWN_ARGS --rmi $IMAGE_TYPE"
+    fi
+    get_var DELETE_VOLUMES "0"
+    if [ "$DELETE_VOLUMES" != "0" ]; then
+        DOWN_ARGS="$DOWN_ARGS -v"
+    fi
+    get_var DELETE_ORPHANS "1"
+    if [ "$DELETE_ORPHANS" = "1" ]; then
+        DOWN_ARGS="$DOWN_ARGS --remove-orphans"
+    fi
+else
+    DOWN_ARGS="$DOWN_ARGS --rmi all -v --remove-orphans"
+fi
+
+run "docker-compose down $DOWN_ARGS"

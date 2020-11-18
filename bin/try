@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+set -e
+
+source $(dirname "$0")/common.sh
+
+read_env
+read_params "$@"
+
+get_var MAGENTO_VERSION
+get_var MAGENTO_EDITION "community"
+get_var MAGENTO_SAMPLE_DATA "small"
+
+get_var MAGENTO_ADMIN_PATH "admin"
+get_var MAGENTO_ADMIN_USERNAME "admin"
+get_var MAGENTO_ADMIN_PASSWORD "" "1"
+get_var MAGENTO_ADMIN_FIRSTNAME "Admin"
+get_var MAGENTO_ADMIN_LASTNAME "User"
+get_var MAGENTO_ADMIN_EMAIL "${MAGENTO_ADMIN_USERNAME}@${MAGENTO_DOMAIN}"
+
+get_var MAGENTO_LANGUAGE "en_US"
+get_var MAGENTO_CURRENCY "USD"
+get_var MAGENTO_TIMEZONE "America/Los_Angeles"
+
+save_env
+
+docker_run "rm -rf ./*"
+docker_run "composer create-project --repository-url=https://repo.magento.com/ magento/project-${MAGENTO_EDITION}-edition=${MAGENTO_VERSION} ."
+
+SEARCH_ENGINE_SETUP=""
+if [ $(ver 2.4) -le $(ver $MAGENTO_VERSION) ]; then
+    SEARCH_ENGINE_SETUP="--search-engine=elasticsearch5 \
+        --elasticsearch-host=\${MAGENTO_ELASTICSEARCH_HOST}"
+fi
+
+docker_run "php bin/magento setup:install \
+    --base-url=http://${MAGENTO_DOMAIN}/ \
+    --use-secure=1 \
+    --base-url-secure=https://${MAGENTO_DOMAIN}/ \
+    --use-secure-admin=1 \
+    --backend-frontname=${MAGENTO_ADMIN_PATH} \
+    --db-host=\${MAGENTO_DATABASE_HOST} \
+    --db-name=${MAGENTO_DATABASE_NAME} \
+    --db-user=${MAGENTO_DATABASE_USERNAME} \
+    --db-password=${MAGENTO_DATABASE_PASSWORD} \
+    ${SEARCH_ENGINE_SETUP}
+    --amqp-host=\${MAGENTO_RABBITMQ_HOST} \
+    --amqp-user=${MAGENTO_RABBITMQ_USERNAME} \
+    --amqp-password=${MAGENTO_RABBITMQ_PASSWORD} \
+    --cache-backend=redis \
+    --cache-backend-redis-server=\${MAGENTO_REDIS_HOST} \
+    --admin-firstname=${MAGENTO_ADMIN_FIRSTNAME} \
+    --admin-lastname=${MAGENTO_ADMIN_LASTNAME} \
+    --admin-email=${MAGENTO_ADMIN_EMAIL} \
+    --admin-user=${MAGENTO_ADMIN_USERNAME} \
+    --admin-password=${MAGENTO_ADMIN_PASSWORD} \
+    --language=${MAGENTO_LANGUAGE} \
+    --currency=${MAGENTO_CURRENCY} \
+    --timezone=${MAGENTO_TIMEZONE} \
+    --use-rewrites=1"
+
+docker_run "php bin/magento setup:perf:generate-fixtures setup/performance-toolkit/profiles/ce/$MAGENTO_SAMPLE_DATA.xml"
+
+if [ "$MAGENTO_DEVELOPER_MODE" = "0" ]; then
+    docker_run "php bin/magento deploy:mode:set production"
+else
+    docker_run "php bin/magento config:set dev/front_end_development_workflow/type client_side_compilation"
+    docker_run "php bin/magento deploy:mode:set developer"
+fi
+
+docker_run "php bin/magento cache:flush"
+
+fixcreds
