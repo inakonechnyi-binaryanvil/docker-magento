@@ -8,7 +8,7 @@ RUN apt-get update && \
     docker-php-ext-configure gd --with-freetype --with-jpeg && \
     docker-php-ext-configure intl && \
     docker-php-ext-install -j$(nproc) gd bcmath intl sodium xsl pdo_mysql soap zip sockets opcache && \
-    pecl install xdebug && \
+    pecl install xdebug-2.9.8 && \
 # ------------------------------ CLEAN UP ----------------------------- #
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
