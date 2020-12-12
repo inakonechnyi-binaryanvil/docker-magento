@@ -29,7 +29,7 @@ docker_run "composer create-project --repository-url=https://repo.magento.com/ m
 
 SEARCH_ENGINE_SETUP=""
 if [ $(ver 2.4) -le $(ver $MAGENTO_VERSION) ]; then
-    SEARCH_ENGINE_SETUP="--search-engine=elasticsearch5 \
+    SEARCH_ENGINE_SETUP="--search-engine=elasticsearch${MAGENTO_ELASTICSEARCH_VERSION} \
         --elasticsearch-host=\${MAGENTO_ELASTICSEARCH_HOST}"
 fi
 
