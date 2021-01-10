@@ -29,3 +29,22 @@ COPY --from=composer:1 /usr/bin/composer /usr/bin/composer
 RUN curl -JL https://files.magerun.net/n98-magerun2.phar -o /usr/local/bin/n98-magerun2 --silent && \
     curl -JL https://raw.githubusercontent.com/netz98/n98-magerun2/master/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2 --silent && \
     chmod +x /usr/local/bin/n98-magerun2
+
+# ----------------------------- PHP SETTINGS -------------------------- #
+ARG MAGENTO_DEVELOPER_MODE
+ARG MAGENTO_PHP_MEMORY_LIMIT
+RUN if [ "$MAGENTO_DEVELOPER_MODE" = "0" ]; then \
+        mv $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini; \
+        rm $PHP_INI_DIR/php.ini-development; \
+    else \
+        mv $PHP_INI_DIR/php.ini-development $PHP_INI_DIR/php.ini; \
+        rm $PHP_INI_DIR/php.ini-production; \
+    fi && \
+    sed -i -e "s/memory_limit =.*/memory_limit = ${MAGENTO_PHP_MEMORY_LIMIT}/g" $PHP_INI_DIR/php.ini
+
+# ------------------------------ USER SETUP --------------------------- #
+ARG MAGENTO_USER
+RUN useradd -m -s /bin/bash -u 1000 $MAGENTO_USER && \
+    chown $MAGENTO_USER:$MAGENTO_USER -R /var/www && \
+    sed -i -e "s/www-data/$MAGENTO_USER/g" /usr/local/etc/php-fpm.d/www.conf
+USER $MAGENTO_USER

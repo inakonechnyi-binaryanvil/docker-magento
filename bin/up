@@ -8,6 +8,7 @@ read_env
 read_params "$@"
 
 get_var MAGENTO_DOMAIN
+get_var MAGENTO_USER $USER
 get_var MAGENTO_DEVELOPER_MODE "0"
 
 get_var MAGENTO_PROXY_VERSION "apache"
@@ -32,14 +33,3 @@ get_var MAGENTO_REDIS_VERSION "5"
 save_env
 
 run "docker-compose up -d"
-
-if [ "$MAGENTO_DEVELOPER_MODE" = "0" ]; then
-    docker_run "mv \$PHP_INI_DIR/php.ini-production \$PHP_INI_DIR/php.ini"
-    docker_run "rm \$PHP_INI_DIR/php.ini-development"
-else
-    docker_run "mv \$PHP_INI_DIR/php.ini-development \$PHP_INI_DIR/php.ini"
-    docker_run "rm \$PHP_INI_DIR/php.ini-production"
-fi
-docker_run "sed -i -e \"s/memory_limit =.*/memory_limit = ${MAGENTO_PHP_MEMORY_LIMIT}/g\" \$PHP_INI_DIR/php.ini"
-
-run "docker-compose restart php"

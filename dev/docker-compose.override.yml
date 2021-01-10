@@ -7,11 +7,11 @@ services:
       - 443:443
   php:
     volumes:
-      - ./var/bashrc:/root/.bashrc
+      - ./var/bashrc:/home/$MAGENTO_USER/.bashrc
       - ./var/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
-      - $HOME/.composer:/root/.composer:cached
-      - $HOME/.ssh:/root/.ssh:cached
-      - $HOME/.gitconfig:/root/.gitconfig
+      - $HOME/.composer:/home/$MAGENTO_USER/.composer:cached
+      - $HOME/.ssh:/home/$MAGENTO_USER/.ssh:cached
+      - $HOME/.gitconfig:/home/$MAGENTO_USER/.gitconfig
   database:
     ports:
       - 3306:3306

@@ -16,5 +16,3 @@ docker_run "rm -rf ./*"
 docker_run "git clone -b ${MAGENTO_GIT_BRANCH} ${MAGENTO_GIT_URL} ."
 docker_run "composer install"
 docker_run "[ -f deploy-patch.sh ] && ./deploy-patch.sh"
-
-fixcreds

@@ -69,5 +69,3 @@ else
 fi
 
 docker_run "php bin/magento cache:flush"
-
-fixcreds

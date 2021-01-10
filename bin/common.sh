@@ -123,10 +123,3 @@ function save_var() {
 function ver() {
     printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
 }
-
-function fixcreds() {
-    docker_run "chown www-data:www-data -R generated/"
-    docker_run "chown www-data:www-data -R pub/media/"
-    docker_run "chown www-data:www-data -R pub/static/"
-    docker_run "chown www-data:www-data -R var/"
-}

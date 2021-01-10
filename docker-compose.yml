@@ -6,6 +6,7 @@ services:
       context: images/proxy/${MAGENTO_PROXY_VERSION}
       args:
         - MAGENTO_DOMAIN=${MAGENTO_DOMAIN}
+        - MAGENTO_USER=${MAGENTO_USER}
     depends_on:
       - php
     networks:
@@ -15,7 +16,12 @@ services:
     volumes:
       - magento:/var/www/html:cached
   php:
-    build: images/php/${MAGENTO_PHP_VERSION}
+    build:
+      context: images/php/${MAGENTO_PHP_VERSION}
+      args:
+        - MAGENTO_USER=${MAGENTO_USER}
+        - MAGENTO_DEVELOPER_MODE=${MAGENTO_DEVELOPER_MODE}
+        - MAGENTO_PHP_MEMORY_LIMIT=${MAGENTO_PHP_MEMORY_LIMIT}
     depends_on:
       - database
       - elasticsearch
